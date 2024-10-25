@@ -73,3 +73,6 @@ dkms.conf
 *.lai
 
 # Executables
+
+#My Folders
+sample/
