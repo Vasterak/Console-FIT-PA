@@ -4,7 +4,7 @@ clear
 
 # get current directory and executable location
 SCRIPT_DIR="$(pwd)"
-PROG="${SCRIPT_DIR}/output.o"
+PROG="${SCRIPT_DIR}/a.out"
 
 # check if folder named "sample" exists in this directory, DOES NOT CHECK CONTENT OF THE FOLDER!
 if ! test -d "${SCRIPT_DIR}/sample"; then
