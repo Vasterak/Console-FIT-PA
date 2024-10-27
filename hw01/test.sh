@@ -1,5 +1,7 @@
 #!/bin/bash
-
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NOCOLOR='\033[0m'
 clear
 
 # get current directory and executable location
@@ -23,8 +25,8 @@ if ! test -d "${SCRIPT_DIR}/sample"; then
     fi
 fi
 
-# loop throught all input files in "sample/ENG/" directory
-for IN_FILE in sample/ENG/*_in.txt; do
+# loop throught all input files in "sample/CZE/" directory
+for IN_FILE in sample/CZE/*_in.txt; do
 
     #get reference files that are named as _out in ENG folder, the script will replace "_in" to "_out"
     REF_FILE=`echo $IN_FILE | sed -e 's/_in\(.*\)$/_out\1/'`
@@ -32,10 +34,12 @@ for IN_FILE in sample/ENG/*_in.txt; do
     #send input into the program and save the output to temp file
     $PROG < $IN_FILE > sample/script_check_temp.txt
 
-    if ! diff -qy $REF_FILE sample/script_check_temp.txt; then
-        echo "Comparation failed with: ${IN_FILE}"
-        exit
+    if ! diff -y $REF_FILE sample/script_check_temp.txt; then
+        echo -e "${RED}-----------------FAIL: ${IN_FILE}------------------"
+	echo -e "${NOCOLOR}"
+        #exit
     else
-        echo "Welldone!"
+        echo -e "${GREEN}---------------------SUCCESS-----------------------"
+	echo -e "${NOCOLOR}"
     fi
 done
