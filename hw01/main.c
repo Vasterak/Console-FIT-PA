@@ -5,7 +5,7 @@
 #include <math.h>
 #include <ctype.h>
 
-const double EPSILON = 0.000001;
+const double EPSILON = 0.0001;
 
 char peekchar()
 {
@@ -16,8 +16,29 @@ char peekchar()
 
 void skip_whitespace()
 {
-    while (isspace(peekchar()))
-        getchar();
+    char a;
+    while (true)
+    {
+        a = peekchar();
+
+        if (isspace(a))
+        {
+            if (a == '\n')
+                break;
+            getchar();
+        }
+        else
+            break;
+    }
+
+}
+
+bool is_double_eq(double a, double b)
+{
+    if (fabs( a - b) < EPSILON)
+        return true;
+    else
+        return false;
 }
 
 // get slope
@@ -122,24 +143,29 @@ int main()
         return 0;
     }
     skip_whitespace();
-    if (peekchar() != '[' && isspace(peekchar()))
+    if (peekchar() == ']')
     {
         printf("Nespravny vstup.\n");
         return 0;
     }
 
-        printf("Bod B:\n");
+    printf("Bod B:\n");
     if (scanf(" [ %lf , %lf ]", &x2, &y2) != 2)
     {
         printf("Nespravny vstup.\n");
         return 0;
     }
     skip_whitespace();
-    if (peekchar() != '[' && isspace(peekchar()))
+    if (peekchar() == ']')
     {
         printf("Nespravny vstup.\n");
         return 0;
     }
+    // if (peekchar() != '[')
+    // {
+    //     printf("Nespravny vstup4.\n");
+    //     return 0;
+    // }
 
     printf("Bod C:\n");
     if (scanf(" [ %lf , %lf ]", &x3, &y3) != 2)
@@ -147,16 +173,26 @@ int main()
         printf("Nespravny vstup.\n");
         return 0;
     }
-    skip_whitespace();
-    if (peekchar() != '[' && isspace(peekchar()))
+    if (!isspace(peekchar()))
     {
-        printf("Nespravny vstup.\n");
-        return 0;
+        if (peekchar() != '[')
+        {
+            printf("Nespravny vstup.\n");
+            return 0;
+        }
     }
 
     //Work with user input
 
-    if ((x1 == x2 && x2 == x3) || (y1 == y2 && y2== y3))
+    //all 3 points have same cords
+    if ((is_double_eq(x1, x2) && is_double_eq(x2, x3)) || (is_double_eq(y1, y2) && is_double_eq(y2, y3)))
+    {
+        printf("Rovnobezniky nelze sestrojit.\n");
+        return 0;
+    }
+
+    //only two points are same
+    if ((is_double_eq(x1, x2) && is_double_eq(y1, y2)) || (is_double_eq(x1, x3) && is_double_eq(y1, y3)) || (is_double_eq(x2, x3) && is_double_eq(y2, y3)))
     {
         printf("Rovnobezniky nelze sestrojit.\n");
         return 0;
@@ -168,11 +204,10 @@ int main()
         printf("Rovnobezniky nelze sestrojit.\n");
         return 0;
     }
-    
 
     //Calculate the last point
-    double x4;
-    double y4;
+    double x4 = 0;
+    double y4 = 0;
     
     //------Variant for ABA'C------
     x4 = x2 + x3 - x1;
