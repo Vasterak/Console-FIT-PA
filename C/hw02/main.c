@@ -15,14 +15,17 @@ const char g_errorMessage[] = "Nespravny vstup.\n";
 // }
 
 // 0 == USER INPUT ERROR, 1 == PRINT TRIANGLE VALUES, 2 == PRINT ONLY TOTAL NUMBER OF TRIANGLES
-int user_input(size_t *firstNum, size_t *secondNum, char *actionType)
+int user_input(int *firstNum, int *secondNum, char *actionType)
 {
     // if (scanf(" %c < %lu ; %lu >", &actionType, firstNum, secondNum) != 3)
     //     return 0;
 
-    if (*firstNum < 0 || *secondNum < 0 || *secondNum < *firstNum)
+    if (*firstNum < 0 || *secondNum < 0 || *firstNum > *secondNum)
         return 0;
 
+    if (*firstNum == 0 || *secondNum == 0)
+        return 0;
+        
     // Check if there is some random char after the user input
     // if (!isspace(peekchar()))
     // {
@@ -42,16 +45,16 @@ int user_input(size_t *firstNum, size_t *secondNum, char *actionType)
         return 2;
 }
 
-void calculate_loop(size_t *firstNum, size_t *secondNum, double *c, size_t *totalTriangles, char actionType)
+void calculate_loop(int *firstNum, int *secondNum, double *c, int *totalTriangles, char actionType)
 {
     // CALCULATION
     // a,b,c are sites of the triangle
     // pythagorean Triplets
 
     double tempVariable;
-    for (size_t a = *firstNum; a < *secondNum; a++)
+    for (int a = *firstNum; a < *secondNum; a++)
     {
-        for (size_t b = a + 1; b < *secondNum; b++)
+        for (int b = a + 1; b < *secondNum; b++)
         {
             *(c) = sqrt(a * a + b * b);
 
@@ -62,7 +65,7 @@ void calculate_loop(size_t *firstNum, size_t *secondNum, double *c, size_t *tota
             if (modf(*(c), &tempVariable) == 0)
             {
                 if (actionType == '?')
-                    printf("* %ld %ld %g\n", a, b, *c);
+                    printf("* %d %d %g\n", a, b, *c);
 
                 (*totalTriangles)++;
             }
@@ -73,7 +76,7 @@ void calculate_loop(size_t *firstNum, size_t *secondNum, double *c, size_t *tota
 int main()
 {
     //VARIABLES
-    size_t firstNum = 0, secondNum = 0, totalTriangles = 0;
+    int firstNum = 0, secondNum = 0, totalTriangles = 0;
     double c;
     char actionType = ' ';
 
@@ -82,7 +85,7 @@ int main()
 
     while (true)
     {
-        int inputType = scanf(" %c < %lu ; %lu >", &actionType, &firstNum, &secondNum);
+        int inputType = scanf(" %c < %d ; %d >", &actionType, &firstNum, &secondNum);
 
         if (inputType == EOF )
             return 0;
@@ -113,7 +116,7 @@ int main()
             return 0;
         }
 
-        printf("Celkem: %ld\n", totalTriangles);
+        printf("Celkem: %d\n", totalTriangles);
         totalTriangles = 0;
     }
     
