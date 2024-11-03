@@ -4,6 +4,13 @@ GREEN='\033[0;32m'
 NOCOLOR='\033[0m'
 clear
 
+#remove existing compiled files
+rm a.out
+rm main.o
+
+#compile with parameters used on progtest
+g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -c -Werror main.c
+
 # get current directory and executable location
 SCRIPT_DIR="$(pwd)"
 PROG="${SCRIPT_DIR}/a.out"
