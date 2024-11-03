@@ -20,6 +20,18 @@ void remove_whiteSpace()
         getchar();
 }
 
+// Function to find the Greatest Common Divisor of two numbers
+int gcd(int a, int b)
+{
+    while (b != 0)
+    {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
 // 0 == USER INPUT ERROR, 1 == PRINT TRIANGLE VALUES, 2 == PRINT ONLY TOTAL NUMBER OF TRIANGLES
 int user_input(int *firstNum, int *secondNum, char *actionType)
 {
@@ -55,7 +67,7 @@ int user_input(int *firstNum, int *secondNum, char *actionType)
         return 2;
 }
 
-void calculate_loop(int *firstNum, int *secondNum, double *c, int *totalTriangles, char actionType)
+void calculate_loop(int *firstNum, int *secondNum, double *c, int *totalTriangles)
 {
     // CALCULATION
     // a,b,c are sites of the triangle
@@ -74,10 +86,49 @@ void calculate_loop(int *firstNum, int *secondNum, double *c, int *totalTriangle
             // check if output of sqrt is integer, so then it is a valid right triangle (Pravoúhlý trojúhelník)
             if (modf(*(c), &tempVariable) == 0)
             {
-                if (actionType == '?')
-                    printf("* %d %d %g\n", a, b, *c);
+                printf("* %d %d %g\n", a, b, *c);
 
                 (*totalTriangles)++;
+            }
+        }
+    }
+}
+
+//optimalization for speed
+void calculate_loop_opt(int *firstNum, int *secondNum, int *totalTriangles)
+{
+    int coefficient, a, b, c;
+    int primeA, primeB, primeC;
+    for (int m = 2; m * m <= *secondNum; m++)
+    {
+        for (int n = 1; n < m; n++)
+        {
+            // Check if m and n are coprime and have opposite parity
+            if ((m - n) % 2 == 1 && gcd(m, n) == 1)
+            {
+                // Generate the primitive triple
+                primeA = m * m - n * n;
+                primeB = 2 * m * n;
+                primeC = m * m + n * n;
+
+                // Find all multiples of primitives 
+                coefficient = 1;
+                while (1)
+                {
+                    a = coefficient * primeA;
+                    b = coefficient * primeB;
+                    c = coefficient * primeC;
+
+                    // Stop if c exceeds the secondNum aka limit
+                    if (c > *secondNum)
+                        break;
+
+                    coefficient++;
+                    if (a > *firstNum - 1 && b > *firstNum - 1 && c > *firstNum - 1)
+                    {
+                        (*totalTriangles)++;
+                    }
+                }
             }
         }
     }
@@ -115,11 +166,11 @@ int main()
             return 0;
 
         case 1:
-            calculate_loop(&firstNum, &secondNum, &c, &totalTriangles, '?');
+            calculate_loop(&firstNum, &secondNum, &c, &totalTriangles);
             break;
 
         case 2:
-            calculate_loop(&firstNum, &secondNum, &c, &totalTriangles, '#');
+            calculate_loop_opt(&firstNum, &secondNum, &totalTriangles);
             break;
 
         default:
