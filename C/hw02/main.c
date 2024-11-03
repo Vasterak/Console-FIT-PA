@@ -7,12 +7,18 @@
 
 const char g_errorMessage[] = "Nespravny vstup.\n";
 
-// char peekchar()
-// {
-//     char a = getchar();
-//     ungetc(a, stdin);
-//     return a;
-// }
+char peekchar()
+{
+    char a = getchar();
+    ungetc(a, stdin);
+    return a;
+}
+
+void remove_whiteSpace()
+{
+    while (isspace(peekchar()))
+        getchar();
+}
 
 // 0 == USER INPUT ERROR, 1 == PRINT TRIANGLE VALUES, 2 == PRINT ONLY TOTAL NUMBER OF TRIANGLES
 int user_input(int *firstNum, int *secondNum, char *actionType)
@@ -25,13 +31,17 @@ int user_input(int *firstNum, int *secondNum, char *actionType)
 
     if (*firstNum == 0 || *secondNum == 0)
         return 0;
-        
-    // Check if there is some random char after the user input
-    // if (!isspace(peekchar()))
-    // {
-    //     printf("toto tady nema co delat\n");
-    //     return 0;
-    // }
+
+    //Check if after the last number there is accualy >
+    remove_whiteSpace();
+    if (peekchar() != '>' )
+    {
+        // printf("tady fail\n");
+        // printf("znak byl: %c\n", peekchar());
+        return 0;
+    }
+    else
+        getchar(); // remove the '>' from stdin
 
     // Check if first char constains only allowed characters
     if (*actionType != '?' && *actionType != '#')
@@ -85,7 +95,7 @@ int main()
 
     while (true)
     {
-        int inputType = scanf(" %c < %d ; %d >", &actionType, &firstNum, &secondNum);
+        int inputType = scanf(" %c < %d ; %d", &actionType, &firstNum, &secondNum);
 
         if (inputType == EOF )
             return 0;
