@@ -34,7 +34,7 @@ TDATE makeDate (unsigned y, unsigned m, unsigned d )
 //------------------------------------------------------HELP FUNCTIONS-------------------------------------------
 
 //Check for LEAP years in Gregorian calendar
-bool is_leap_year(int y)
+bool is_leap_year(unsigned int y)
 {
     if (y % 4000 == 0)
         return false;
@@ -42,14 +42,115 @@ bool is_leap_year(int y)
     return !(y % 4) && ((y % 100) || !(y % 400));
 }
 
+//check if input date is valid
+bool is_valid_date(TDATE date)
+{
+    // Year cannot be less than 2000
+    if (date.m_Year < 2000)
+        return false;
 
+    // Months only 1-12
+    if (date.m_Month < 1 || date.m_Month > 12)
+        return false;
 
+    // Days only 1-31
+    if (date.m_Day > 31 || date.m_Day < 1)
+        return false;
+
+    if (date.m_Day > 29 && date.m_Month == 2)
+        return false;
+
+    // Check 29 on February
+    if (date.m_Day == 29 && date.m_Month == 2)
+    {
+        // If this is not leap year return false.
+        if (!is_leap_year(date.m_Year))
+            return false;
+    }
+
+    // 'Even' months 2,4,6,9,11 cannot have 31 days
+    if (((date.m_Month % 2 == 0) && date.m_Month < 7) || date.m_Month == 9 || date.m_Month == 11)
+    {
+        if (date.m_Day > 30)
+            return false;
+    }
+
+    return true;
+}
+
+// return days in specific zellers index, the _means it is internal fuction and should't be call randomly
+int _zellers_algorithm(TDATE date)
+{
+    int year2 = date.m_Year;
+    int m = date.m_Month;
+    // Janury is 13 and February is 14
+    if (m == 1)
+    {
+        m = 13;
+        year2--;
+    }
+    else if (m == 2)
+    {
+        m = 14;
+        year2--;
+    }
+
+    int K = year2 % 100; // year of the century
+    int J = year2 / 100; // is the zero-based century for 1995 it is 19
+
+    // https://en.wikipedia.org/wiki/Zeller%27s_congruence
+    return (date.m_Day + ((13 * (m + 1)) / 5) + K + (K / 4) + (J / 4) + (5 * J)) % 7;
+}
+
+int what_day_is_it()
+{
+    
+}
+
+bool is_leap_year(int y)
+{
+    if (y % 4000 == 0)
+        return false;
+
+    return !(y % 4) && ((y % 100) || !(y % 400));
+    // if (((y % 4 == 0) && (y % 100 != 0)) || (y % 400 == 0))
+    //   return true;
+    // else
+    //   return false;
+}
 
 //------------------------------------------------------MAIN FUNCTIONS-------------------------------------------
 
 long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigned  dowMask )
 {
+    //check input for valid data
+    if (!is_valid_date(from))
+        return -1;
     
+    if (!is_valid_date(to))
+        return -1;
+
+
+    // Check if first date is lower than second date, dates can be equal
+    if (to.m_Year < from.m_Year)
+        return -1;
+
+    if (to.m_Year == from.m_Year)
+    {
+        if (to.m_Month < from.m_Month)
+            return -1;
+
+        if (to.m_Month == from.m_Month)
+        {
+            if (to.m_Day < from.m_Day)
+                return -1;
+        }
+    }
+
+    //CALCULATIONS
+
+
+
     return 0;
 }
 
