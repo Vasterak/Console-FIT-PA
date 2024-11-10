@@ -2,17 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdbool.h>
+#include <math.h>
 
-constexpr unsigned DOW_MON      = 0b0000'0001;
-constexpr unsigned DOW_TUE      = 0b0000'0010;
-constexpr unsigned DOW_WED      = 0b0000'0100;
-constexpr unsigned DOW_THU      = 0b0000'1000;
-constexpr unsigned DOW_FRI      = 0b0001'0000;
-constexpr unsigned DOW_SAT      = 0b0010'0000;
-constexpr unsigned DOW_SUN      = 0b0100'0000;
-constexpr unsigned DOW_WORKDAYS = DOW_MON | DOW_TUE | DOW_WED | DOW_THU | DOW_FRI;
-constexpr unsigned DOW_WEEKEND  = DOW_SAT | DOW_SUN;
-constexpr unsigned DOW_ALL      = DOW_WORKDAYS | DOW_WEEKEND;
+//these are just binary representation of each day. IDK why he choose this way in high level language but ok, like enums also exists... I'm not manipulating AVR ports...
+constexpr unsigned DOW_MON      = 0b0000'0001; // 1
+constexpr unsigned DOW_TUE      = 0b0000'0010; // 2
+constexpr unsigned DOW_WED      = 0b0000'0100; // 4
+constexpr unsigned DOW_THU      = 0b0000'1000; // 8
+constexpr unsigned DOW_FRI      = 0b0001'0000; // 16
+constexpr unsigned DOW_SAT      = 0b0010'0000; // 32
+constexpr unsigned DOW_SUN      = 0b0100'0000; // 64
+constexpr unsigned DOW_WORKDAYS = DOW_MON | DOW_TUE | DOW_WED | DOW_THU | DOW_FRI;  // 31
+constexpr unsigned DOW_WEEKEND  = DOW_SAT | DOW_SUN;                                // 96
+constexpr unsigned DOW_ALL      = DOW_WORKDAYS | DOW_WEEKEND;                       // 127
 
 typedef struct TDate
 {
@@ -27,6 +30,22 @@ TDATE makeDate (unsigned y, unsigned m, unsigned d )
     return res;
 }
 #endif /* __PROGTEST__ */
+
+//------------------------------------------------------HELP FUNCTIONS-------------------------------------------
+
+//Check for LEAP years in Gregorian calendar
+bool is_leap_year(int y)
+{
+    if (y % 4000 == 0)
+        return false;
+
+    return !(y % 4) && ((y % 100) || !(y % 400));
+}
+
+
+
+
+//------------------------------------------------------MAIN FUNCTIONS-------------------------------------------
 
 long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigned  dowMask )
 {
@@ -47,38 +66,51 @@ TDATE endDate ( TDATE from, long long connections, unsigned  perWorkDay, unsigne
 #ifndef __PROGTEST__
 int main ()
 {
-  TDATE d;
-  assert ( countConnections ( makeDate ( 2024, 10, 1 ), makeDate ( 2024, 10, 31 ), 1, DOW_ALL ) == 31 );
-  assert ( countConnections ( makeDate ( 2024, 10, 1 ), makeDate ( 2024, 10, 31 ), 10, DOW_ALL ) == 266 );
-  assert ( countConnections ( makeDate ( 2024, 10, 1 ), makeDate ( 2024, 10, 31 ), 1, DOW_WED ) == 5 );
-  assert ( countConnections ( makeDate ( 2024, 10, 2 ), makeDate ( 2024, 10, 30 ), 1, DOW_WED ) == 5 );
-  assert ( countConnections ( makeDate ( 2024, 10, 1 ), makeDate ( 2024, 10, 1 ), 10, DOW_TUE ) == 10 );
-  assert ( countConnections ( makeDate ( 2024, 10, 1 ), makeDate ( 2024, 10, 1 ), 10, DOW_WED ) == 0 );
-  assert ( countConnections ( makeDate ( 2024, 1, 1 ), makeDate ( 2034, 12, 31 ), 5, DOW_MON | DOW_FRI | DOW_SAT ) == 7462 );
-  assert ( countConnections ( makeDate ( 2024, 1, 1 ), makeDate ( 2034, 12, 31 ), 0, DOW_MON | DOW_FRI | DOW_SAT ) == 0 );
-  assert ( countConnections ( makeDate ( 2024, 1, 1 ), makeDate ( 2034, 12, 31 ), 100, 0 ) == 0 );
-  assert ( countConnections ( makeDate ( 2024, 10, 10 ), makeDate ( 2024, 10, 9 ), 1, DOW_MON ) == -1 );
-  assert ( countConnections ( makeDate ( 2024, 2, 29 ), makeDate ( 2024, 2, 29 ), 1, DOW_ALL ) == 1 );
-  assert ( countConnections ( makeDate ( 2023, 2, 29 ), makeDate ( 2023, 2, 29 ), 1, DOW_ALL ) == -1 );
-  assert ( countConnections ( makeDate ( 2100, 2, 29 ), makeDate ( 2100, 2, 29 ), 1, DOW_ALL ) == -1 );
-  assert ( countConnections ( makeDate ( 2400, 2, 29 ), makeDate ( 2400, 2, 29 ), 1, DOW_ALL ) == 1 );
-  assert ( countConnections ( makeDate ( 4000, 2, 29 ), makeDate ( 4000, 2, 29 ), 1, DOW_ALL ) == -1 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 1, DOW_ALL );
-  assert ( d . m_Year == 2025 && d . m_Month == 1 && d . m_Day == 8 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 6, DOW_ALL );
-  assert ( d . m_Year == 2024 && d . m_Month == 10 && d . m_Day == 20 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 1, DOW_WORKDAYS );
-  assert ( d . m_Year == 2025 && d . m_Month == 2 && d . m_Day == 17 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 4, DOW_WORKDAYS );
-  assert ( d . m_Year == 2024 && d . m_Month == 11 && d . m_Day == 4 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 1, DOW_THU );
-  assert ( d . m_Year == 2026 && d . m_Month == 9 && d . m_Day == 2 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 2, DOW_THU );
-  assert ( d . m_Year == 2025 && d . m_Month == 9 && d . m_Day == 17 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 0, DOW_THU );
-  assert ( d . m_Year == 0 && d . m_Month == 0 && d . m_Day == 0 );
-  d = endDate ( makeDate ( 2024, 10, 1 ), 100, 1, 0 );
-  assert ( d . m_Year == 0 && d . m_Month == 0 && d . m_Day == 0 );
-  return EXIT_SUCCESS;
+    printf("%d\n", DOW_MON);
+    printf("%d\n", DOW_TUE);
+    printf("%d\n", DOW_WED);
+    printf("%d\n", DOW_THU);
+    printf("%d\n", DOW_FRI);
+    printf("%d\n", DOW_SAT);
+    printf("%d\n", DOW_SUN);
+    printf("--------\n");
+    printf("%d\n", DOW_WORKDAYS);
+    printf("%d\n", DOW_WEEKEND);
+    printf("%d\n", DOW_ALL);
+
+    TDATE d;
+    assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 31), 1, DOW_ALL) == 31);
+    assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 31), 10, DOW_ALL) == 266);
+    assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 31), 1, DOW_WED) == 5);
+    assert(countConnections(makeDate(2024, 10, 2), makeDate(2024, 10, 30), 1, DOW_WED) == 5);
+    assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 1), 10, DOW_TUE) == 10);
+    assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 1), 10, DOW_WED) == 0);
+    assert(countConnections(makeDate(2024, 1, 1), makeDate(2034, 12, 31), 5, DOW_MON | DOW_FRI | DOW_SAT) == 7462);
+    assert(countConnections(makeDate(2024, 1, 1), makeDate(2034, 12, 31), 0, DOW_MON | DOW_FRI | DOW_SAT) == 0);
+    assert(countConnections(makeDate(2024, 1, 1), makeDate(2034, 12, 31), 100, 0) == 0);
+    assert(countConnections(makeDate(2024, 10, 10), makeDate(2024, 10, 9), 1, DOW_MON) == -1);
+    assert(countConnections(makeDate(2024, 2, 29), makeDate(2024, 2, 29), 1, DOW_ALL) == 1);
+    assert(countConnections(makeDate(2023, 2, 29), makeDate(2023, 2, 29), 1, DOW_ALL) == -1);
+    assert(countConnections(makeDate(2100, 2, 29), makeDate(2100, 2, 29), 1, DOW_ALL) == -1);
+    assert(countConnections(makeDate(2400, 2, 29), makeDate(2400, 2, 29), 1, DOW_ALL) == 1);
+    assert(countConnections(makeDate(4000, 2, 29), makeDate(4000, 2, 29), 1, DOW_ALL) == -1);
+
+    d = endDate(makeDate(2024, 10, 1), 100, 1, DOW_ALL);
+    assert(d.m_Year == 2025 && d.m_Month == 1 && d.m_Day == 8);
+    d = endDate(makeDate(2024, 10, 1), 100, 6, DOW_ALL);
+    assert(d.m_Year == 2024 && d.m_Month == 10 && d.m_Day == 20);
+    d = endDate(makeDate(2024, 10, 1), 100, 1, DOW_WORKDAYS);
+    assert(d.m_Year == 2025 && d.m_Month == 2 && d.m_Day == 17);
+    d = endDate(makeDate(2024, 10, 1), 100, 4, DOW_WORKDAYS);
+    assert(d.m_Year == 2024 && d.m_Month == 11 && d.m_Day == 4);
+    d = endDate(makeDate(2024, 10, 1), 100, 1, DOW_THU);
+    assert(d.m_Year == 2026 && d.m_Month == 9 && d.m_Day == 2);
+    d = endDate(makeDate(2024, 10, 1), 100, 2, DOW_THU);
+    assert(d.m_Year == 2025 && d.m_Month == 9 && d.m_Day == 17);
+    d = endDate(makeDate(2024, 10, 1), 100, 0, DOW_THU);
+    assert(d.m_Year == 0 && d.m_Month == 0 && d.m_Day == 0);
+    d = endDate(makeDate(2024, 10, 1), 100, 1, 0);
+    assert(d.m_Year == 0 && d.m_Month == 0 && d.m_Day == 0);
+    return EXIT_SUCCESS;
 }
 #endif /* __PROGTEST__ */
