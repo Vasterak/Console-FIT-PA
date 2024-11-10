@@ -31,6 +31,10 @@ TDATE makeDate (unsigned y, unsigned m, unsigned d )
 }
 #endif /* __PROGTEST__ */
 
+//------------------------------------------------------MY VARIABLES-------------------------------------------
+unsigned int howMuchEachDayInWeek[8] = {0}; // function will fill up this array with values that determines 'perWorkDay' to each day in week, last value is for TOTAL
+const unsigned int daysInMonth[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
 //------------------------------------------------------HELP FUNCTIONS-------------------------------------------
 
 //Check for LEAP years in Gregorian calendar
@@ -102,23 +106,67 @@ int _zellers_algorithm(TDATE date)
     return (date.m_Day + ((13 * (m + 1)) / 5) + K + (K / 4) + (J / 4) + (5 * J)) % 7;
 }
 
-int what_day_is_it()
+//return the ISO index for each day, Monday = 1, Tuesday = 2 ... Sunday = 7.
+int what_day_is_it(TDATE date)
 {
+    return ((_zellers_algorithm(date) + 5 ) % 7) + 1;
+}
+
+//calculate total connections per week for each day
+void calc_connections_week(const unsigned dowMask, const unsigned perWorkDay)
+{
+    //clear the array
+    for (size_t i = 0; i < sizeof(howMuchEachDayInWeek) / sizeof(unsigned int); i++)
+        howMuchEachDayInWeek[i] = 0;
     
+    //set values to it
+    for (size_t i = 0; i < (sizeof(howMuchEachDayInWeek) / sizeof(unsigned int) - 1); i++)
+    {
+        //check if bit is set for that position
+        if (dowMask & (1 << i))
+        {
+            //saturday
+            if (i == 5)
+                howMuchEachDayInWeek[i] = ceil(perWorkDay / 2.f);
+
+            //sunday
+            else if (i == 6)
+                howMuchEachDayInWeek[i] = ceil(perWorkDay / 3.f);
+
+            //workweek
+            else
+                howMuchEachDayInWeek[i] = perWorkDay;
+        }
+        //get total
+        howMuchEachDayInWeek[7] += howMuchEachDayInWeek[i];
+    }
 }
 
-bool is_leap_year(int y)
+bool is_same_date(TDATE from, TDATE to)
 {
-    if (y % 4000 == 0)
+    if (from.m_Day == to.m_Day && from.m_Month == to.m_Month && from.m_Year == to.m_Year)
+        return true;
+    else
         return false;
-
-    return !(y % 4) && ((y % 100) || !(y % 400));
-    // if (((y % 4 == 0) && (y % 100 != 0)) || (y % 400 == 0))
-    //   return true;
-    // else
-    //   return false;
 }
 
+//does not work for adding large num of days
+void addDays(TDATE *date, unsigned numOfDays)
+{
+    //add the days
+    date->m_Day += numOfDays;
+    
+    //check if num of days in given month are over the max for that month
+    if (date->m_Day > daysInMonth[date->m_Month])
+    {
+        //leap year
+        if (is_leap_year(date->m_Year) && date->m_Month == 2)
+        {
+            date->m_Day > 29;
+            date->m_Month++;
+        }
+    }
+}
 //------------------------------------------------------MAIN FUNCTIONS-------------------------------------------
 
 long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigned  dowMask )
@@ -148,8 +196,27 @@ long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigne
     }
 
     //CALCULATIONS
+    
+    //variables
+    TDATE workDate;
+    workDate.m_Day = from.m_Day;
+    workDate.m_Month = from.m_Month;
+    workDate.m_Year = from.m_Year;
 
+    //set new values for week
+    calc_connections_week(dowMask, perWorkDay);
 
+    //within the same year
+    if (from.m_Year == to.m_Year)
+    {
+        while (!is_same_date(workDate, to))
+        {
+            
+        }
+        
+    }
+
+    printf("test1\n");
 
     return 0;
 }
