@@ -9,4 +9,4 @@ fi
 if [ -f "$FILE2" ] ; then
 	rm "$FILE2"
 fi
-g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -c -Werror main.c
+g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -c -Werror main.cpp
