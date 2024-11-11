@@ -33,7 +33,7 @@ TDATE makeDate (unsigned y, unsigned m, unsigned d )
 
 //------------------------------------------------------MY VARIABLES-------------------------------------------
 unsigned int howMuchEachDayInWeek[8] = {0}; // function will fill up this array with values that determines 'perWorkDay' to each day in week, last value is for TOTAL
-const unsigned int daysInMonth[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const unsigned int daysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 //------------------------------------------------------HELP FUNCTIONS-------------------------------------------
 
@@ -106,10 +106,10 @@ int _zellers_algorithm(TDATE date)
     return (date.m_Day + ((13 * (m + 1)) / 5) + K + (K / 4) + (J / 4) + (5 * J)) % 7;
 }
 
-//return the ISO index for each day, Monday = 1, Tuesday = 2 ... Sunday = 7.
+//return the ISO index for each day, Monday = 0, Tuesday = 2 ... Sunday = 6.
 int what_day_is_it(TDATE date)
 {
-    return ((_zellers_algorithm(date) + 5 ) % 7) + 1;
+    return ((_zellers_algorithm(date) + 5 ) % 7);
 }
 
 //calculate total connections per week for each day
@@ -150,23 +150,38 @@ bool is_same_date(TDATE from, TDATE to)
         return false;
 }
 
-//does not work for adding large num of days
-void addDays(TDATE *date, unsigned numOfDays)
+//used for total days counting, internal function do not use independelty
+unsigned _count_leap_years(TDATE date)
 {
-    //add the days
-    date->m_Day += numOfDays;
-    
-    //check if num of days in given month are over the max for that month
-    if (date->m_Day > daysInMonth[date->m_Month])
-    {
-        //leap year
-        if (is_leap_year(date->m_Year) && date->m_Month == 2)
-        {
-            date->m_Day > 29;
-            date->m_Month++;
-        }
-    }
+    unsigned years = date.m_Year;
+
+    if (date.m_Month <= 2)
+        years--;
+
+    return years / 4 - years / 100 + years / 400;
 }
+
+// return number of days between two dates
+unsigned int get_difference(TDATE from, TDATE to)
+{
+    unsigned long long n1 = from.m_Year * 365 + from.m_Day;
+
+    for (size_t i = 0; i < from.m_Month - 1; i++)
+        n1 += daysInMonth[i];
+
+    n1 += _count_leap_years(from);
+
+    unsigned long long n2 = to.m_Year * 365 + to.m_Day;
+
+    for (size_t i = 0; i < to.m_Month - 1; i++)
+        n2 += daysInMonth[i];
+
+    n2 += _count_leap_years(to);
+
+    // return difference between two counts
+    return (n2 - n1);
+}
+
 //------------------------------------------------------MAIN FUNCTIONS-------------------------------------------
 
 long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigned  dowMask )
@@ -203,22 +218,56 @@ long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigne
     workDate.m_Month = from.m_Month;
     workDate.m_Year = from.m_Year;
 
+    unsigned int totalDays = 0;
+    unsigned int firstDayIndex = what_day_is_it(from);
+    unsigned int totalConnections = 0;
+
     //set new values for week
     calc_connections_week(dowMask, perWorkDay);
 
-    //within the same year
-    if (from.m_Year == to.m_Year)
+    //get total days betweem dates
+    totalDays = get_difference(from, to) + 1;
+
+    // debug
+    printf("firstDayIndex %d\n", firstDayIndex); //what day is the start date
+    printf("totalDays %d\n",     totalDays);    // how many days are there
+
+
+
+    //calculate to begining of the week
+    for (size_t i = firstDayIndex; i < (sizeof(howMuchEachDayInWeek) / sizeof(unsigned int) - 1); i++)
     {
-        while (!is_same_date(workDate, to))
+        if (totalDays == 0)
         {
-            
+            printf("totalConnections %d\n", totalConnections);
+            printf("------------------\n");
+            return totalConnections;
         }
         
+        //check if for that day connection was done. if it wasn't there is stored 0 inside array, so no need for if statement
+        totalConnections += howMuchEachDayInWeek[i];
+        totalDays--;
     }
 
-    printf("test1\n");
+    //Calculate the number of connections for each day.
+    while (totalDays != 0)
+    {        
+        //goes though one week
+        for (size_t i = 0; i < (sizeof(howMuchEachDayInWeek) / sizeof(unsigned int) - 1); i++)
+        {
+            if (totalDays == 0)
+            {
+                printf("totalConnections %d\n", totalConnections);
+                printf("------------------\n");
 
-    return 0;
+                return totalConnections;
+            }
+
+            totalConnections += howMuchEachDayInWeek[i];
+            totalDays--;
+        }
+    }
+    return totalConnections;
 }
 
 TDATE endDate ( TDATE from, long long connections, unsigned  perWorkDay, unsigned  dowMask )
@@ -234,18 +283,6 @@ TDATE endDate ( TDATE from, long long connections, unsigned  perWorkDay, unsigne
 #ifndef __PROGTEST__
 int main ()
 {
-    printf("%d\n", DOW_MON);
-    printf("%d\n", DOW_TUE);
-    printf("%d\n", DOW_WED);
-    printf("%d\n", DOW_THU);
-    printf("%d\n", DOW_FRI);
-    printf("%d\n", DOW_SAT);
-    printf("%d\n", DOW_SUN);
-    printf("--------\n");
-    printf("%d\n", DOW_WORKDAYS);
-    printf("%d\n", DOW_WEEKEND);
-    printf("%d\n", DOW_ALL);
-
     TDATE d;
     assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 31), 1, DOW_ALL) == 31);
     assert(countConnections(makeDate(2024, 10, 1), makeDate(2024, 10, 31), 10, DOW_ALL) == 266);
