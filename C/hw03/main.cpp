@@ -53,6 +53,9 @@ bool is_valid_date(TDATE date)
     if (date.m_Year < 2000)
         return false;
 
+    if (date.m_Year > 1000000000)
+        return false;
+
     // Months only 1-12
     if (date.m_Month < 1 || date.m_Month > 12)
         return false;
@@ -112,7 +115,7 @@ int what_day_is_it(TDATE date)
     return ((_zellers_algorithm(date) + 5 ) % 7);
 }
 
-//calculate total connections per week for each day
+// calculate total connections per week for each day 'howMuchEachDayInWeek'
 void calc_connections_week(const unsigned dowMask, const unsigned perWorkDay)
 {
     //clear the array
@@ -182,6 +185,43 @@ unsigned int get_difference(TDATE from, TDATE to)
     return (n2 - n1);
 }
 
+// internal function
+int _days_in_month(unsigned year, unsigned month)
+{
+    if (month == 2 && is_leap_year(year))
+        return 29;
+    return daysInMonth[month - 1];
+}
+
+//you can add multiple days at the same time, use it for optimalization
+void add_day_to_date(TDATE *date, unsigned num_of_days)
+{
+    while (num_of_days > 0)
+    {
+        unsigned daysInCurrentMonth = _days_in_month(date->m_Year, date->m_Month);
+
+        if (date->m_Day + num_of_days <= daysInCurrentMonth)
+        {
+            date->m_Day += num_of_days;
+            num_of_days = 0; // Done adding days
+        }
+        else
+        {
+            num_of_days -= (daysInCurrentMonth - date->m_Day + 1);
+            date->m_Day = 1;
+
+            // Apply to next month
+            if (date->m_Month == 12)
+            {
+                date->m_Month = 1;
+                date->m_Year++;
+            }
+            else
+                date->m_Month++;
+        }
+    }
+}
+
 //------------------------------------------------------MAIN FUNCTIONS-------------------------------------------
 
 long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigned  dowMask )
@@ -213,11 +253,6 @@ long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigne
     //CALCULATIONS
     
     //variables
-    TDATE workDate;
-    workDate.m_Day = from.m_Day;
-    workDate.m_Month = from.m_Month;
-    workDate.m_Year = from.m_Year;
-
     unsigned int totalDays = 0;
     unsigned int firstDayIndex = what_day_is_it(from);
     unsigned int totalConnections = 0;
@@ -272,12 +307,73 @@ long long countConnections ( TDATE from, TDATE to, unsigned  perWorkDay, unsigne
 
 TDATE endDate ( TDATE from, long long connections, unsigned  perWorkDay, unsigned  dowMask )
 {
-    TDATE test;
-    test.m_Day = 5;
-    test.m_Month = 10;
-    test.m_Year = 100;
+    // to the finish date
+    TDATE to = from;
 
-    return test;
+    int pocetDni = 0;
+
+    //check if datum is valid or if number of connections
+    if (!is_valid_date(from) || connections < 0 || perWorkDay == 0 || dowMask == 0 || dowMask > 127)
+    {
+        to.m_Day = 0;
+        to.m_Month = 0;
+        to.m_Year = 0;
+        return to;
+    }
+    
+
+    // set new values for week
+    calc_connections_week(dowMask, perWorkDay);
+
+    //get what day is the first date
+    unsigned int firstDayIndex = what_day_is_it(from);
+
+    // debug
+    printf("****************************\n");
+    printf("firstDayIndex %d\n", firstDayIndex); // what day is the start date
+    printf("start connections %lld\n", connections); // what day is the start date
+    printf("howMuchEachDayInWeek %d\n", howMuchEachDayInWeek[7]); // total connections per week
+
+    // calculate to begining of the week
+    for (size_t i = firstDayIndex; i < (sizeof(howMuchEachDayInWeek) / sizeof(unsigned int) - 1); i++)
+    {        
+        connections -= howMuchEachDayInWeek[i];
+
+        if (connections < 0 || ((connections - howMuchEachDayInWeek[(i + 1) % 7]) <= 0))
+        {
+            return to;
+        }
+        else
+        {
+            add_day_to_date(&to, 1);
+            pocetDni++;
+            printf("%d: %d.%d.%d \t %lld \t%ld\n",pocetDni, to.m_Day, to.m_Month, to.m_Year, connections, i);
+        }
+    }
+
+    //if it do not have enough connections for the first date
+    //if ()
+
+    while (connections > 0)
+    {
+        // goes though one week
+        for (size_t i = 0; i < (sizeof(howMuchEachDayInWeek) / sizeof(unsigned int) - 1); i++)
+        {
+            connections -= howMuchEachDayInWeek[i];
+            if (connections < 0 || ((connections - howMuchEachDayInWeek[(i + 1) % 7]) <= 0))
+            {
+                return to;
+            }
+            else
+            {
+                add_day_to_date(&to, 1);
+                pocetDni++;
+                printf("%d: %d.%d.%d \t %lld \t%ld\n", pocetDni, to.m_Day, to.m_Month, to.m_Year, connections, i);
+            }
+        }
+        printf("co tyden vzdal a dal pico\n");
+    }
+    return to;
 }
 
 #ifndef __PROGTEST__
@@ -300,22 +396,38 @@ int main ()
     assert(countConnections(makeDate(2400, 2, 29), makeDate(2400, 2, 29), 1, DOW_ALL) == 1);
     assert(countConnections(makeDate(4000, 2, 29), makeDate(4000, 2, 29), 1, DOW_ALL) == -1);
 
+    d = endDate(makeDate(2024, 10, 1), 1, 1, DOW_ALL);
+    assert(d.m_Year == 2024 && d.m_Month == 10 && d.m_Day == 1);
+    printf("DALSI KOKOT\n");
+
     d = endDate(makeDate(2024, 10, 1), 100, 1, DOW_ALL);
     assert(d.m_Year == 2025 && d.m_Month == 1 && d.m_Day == 8);
+
+    printf("DALSI KOKOT\n");
+
     d = endDate(makeDate(2024, 10, 1), 100, 6, DOW_ALL);
     assert(d.m_Year == 2024 && d.m_Month == 10 && d.m_Day == 20);
+
+    printf("DALSI KOKOT\n");
+
     d = endDate(makeDate(2024, 10, 1), 100, 1, DOW_WORKDAYS);
     assert(d.m_Year == 2025 && d.m_Month == 2 && d.m_Day == 17);
+
     d = endDate(makeDate(2024, 10, 1), 100, 4, DOW_WORKDAYS);
     assert(d.m_Year == 2024 && d.m_Month == 11 && d.m_Day == 4);
+
     d = endDate(makeDate(2024, 10, 1), 100, 1, DOW_THU);
     assert(d.m_Year == 2026 && d.m_Month == 9 && d.m_Day == 2);
+
     d = endDate(makeDate(2024, 10, 1), 100, 2, DOW_THU);
     assert(d.m_Year == 2025 && d.m_Month == 9 && d.m_Day == 17);
+
     d = endDate(makeDate(2024, 10, 1), 100, 0, DOW_THU);
     assert(d.m_Year == 0 && d.m_Month == 0 && d.m_Day == 0);
+
     d = endDate(makeDate(2024, 10, 1), 100, 1, 0);
     assert(d.m_Year == 0 && d.m_Month == 0 && d.m_Day == 0);
+
     return EXIT_SUCCESS;
 }
 #endif /* __PROGTEST__ */
