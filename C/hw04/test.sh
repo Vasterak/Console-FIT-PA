@@ -5,11 +5,19 @@ NOCOLOR='\033[0m'
 clear
 
 #remove existing compiled files
-rm a.out
-rm main.o
+FILE1="a.out"
+FILE2="main.o"
+
+if [ -f "$FILE1" ] ; then
+        rm "$FILE1"
+fi
+if [ -f "$FILE2" ] ; then
+        rm "$FILE2"
+fi
+
 
 #compile with parameters used on progtest
-g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -c -Werror main.c
+g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -Werror main.c
 
 # get current directory and executable location
 SCRIPT_DIR="$(pwd)"
