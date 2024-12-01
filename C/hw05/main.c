@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define DEBUG
-const int DEFAULT_ALLOC = 100;
+const int DEFAULT_ALLOC = 1000;
 
 // Macro "function" to toggle debug messages
 // https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
@@ -18,7 +18,7 @@ const int DEFAULT_ALLOC = 100;
 
 void error_msg()
 {
-    printf("Nespravny vstup.");
+    printf("Nespravny vstup.\n");
 }
 
 char peak_char()
@@ -44,10 +44,8 @@ bool add_stock_price(int **stockPrice, size_t *realLength, size_t *allocLength)
 {   
     //DEBUG_PRINT("Pointer address: %p - Pointer value: %p, dereferenced pointer: %p\n", (void *) &stockPrice, (void *) stockPrice, (void *) *stockPrice);
     int userInput = 0;
-    // if (scanf(" %d", &userInput) != 1)
-    //     return false;
-
-    userInput = *realLength * 10;
+    if (scanf(" %d", &userInput) != 1)
+        return false;
 
     //stock can apperently have a complete zero value
     if (userInput < 0)
@@ -64,7 +62,6 @@ bool add_stock_price(int **stockPrice, size_t *realLength, size_t *allocLength)
         }
         DEBUG_PRINT("Realloc happened, address after %p, allocLength: %ld\n",  (void *) *stockPrice, *allocLength);
     }
-    DEBUG_PRINT("Real length: %ld\n", *realLength);
     (*stockPrice)[*realLength] = userInput;
     (*realLength)++;
 
@@ -80,60 +77,54 @@ int main()
     //dynamic alloc
     int * stockPrice = (int*) malloc(sizeof(int) * DEFAULT_ALLOC);
     if (stockPrice == NULL)
+    {
+        free(stockPrice);
         return 1;
+    }
 
     printf("Ceny, hledani:\n");
-
-    stockPrice[realLength] = 1;
-    realLength++;
 
     int scanfCodes = 0;
     char operationChar = '\0';
     while (true)
     {
-        // scanfCodes = scanf(" %c", &operationChar);
-        // if (scanfCodes != 1)
-        // {
-        //     if (scanfCodes == EOF)
-        //         break;
-        //     else
-        //     {
-        //         error_msg();
-        //         return 1;
-        //     }
-        // }
-
-        // switch (operationChar)
-        // {
-        // case '+':
-        //     stockPrice[0] = 100;
-        //     //DEBUG_PRINT("Pointer address: %p - Pointer value: %p, dereferenced pointer: %d\n", (void *) &stockPrice, (void *) stockPrice, *stockPrice);
-        //     //DEBUG_PRINT("value of first item in array: %d\n", stockPrice[0]);
-        //     if (add_stock_price(&stockPrice, &realLength, &allocLength) == false)
-        //     {
-        //         error_msg();
-        //         return 1;
-        //     }
-        //     break;
-            
-        // case '?':
-        //     break;
-        
-        // default:
-        //     error_msg();
-        //     return 1;
-        //     break;
-        // }
-
-        if (add_stock_price(&stockPrice, &realLength, &allocLength) == false)
+        scanfCodes = scanf(" %c", &operationChar);
+        if (scanfCodes != 1)
         {
-            error_msg();
-            return 1;
+            if (scanfCodes == EOF)
+                break;
+            else
+            {
+                error_msg();
+                return 1;
+            }
         }
 
-        if (realLength == 10000)
+        switch (operationChar)
+        {
+        case '+':
+            if (add_stock_price(&stockPrice, &realLength, &allocLength) == false)
+            {
+                error_msg();
+                return 1;
+            }
             break;
+            
+        case '?':
+            break;
+        
+        default:
+            error_msg();
+            free(stockPrice);
+            return 1;
+        }
     }
+
+    for (size_t i = 0; i < realLength; i++)
+    {
+        printf("%ld: %d\n", i, stockPrice[i]);
+    }
+    
 
     free(stockPrice);
 
