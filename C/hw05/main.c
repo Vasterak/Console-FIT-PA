@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define DEBUG
+//#define DEBUG
 const int DEFAULT_ALLOC = 1000;
 
 // Macro "function" to toggle debug messages
@@ -71,9 +71,9 @@ bool add_stock_price(int **stockPrice, size_t *realLength, size_t *allocLength)
 
 bool check_stock(int *stockPrice, size_t *realLength)
 {
-    //using long long isted of size_t to detect negative values in user input
-    long long from, to;
-    if (scanf(" %lld %lld", &from, &to) != 2)
+    //using int isted of size_t to detect negative values in user input
+    int from, to;
+    if (scanf(" %d %d", &from, &to) != 2)
         return false;
 
     if (from < 0 || to < 0 || from > to)
@@ -82,8 +82,75 @@ bool check_stock(int *stockPrice, size_t *realLength)
     if ((size_t)to >= *realLength)
         return false;
 
+    DEBUG_PRINT("FROM: %d, TO: %d\n", from, to);
+
     //main algorithm
-    
+    //FIND THE MAXIMUM PROFIT
+    int startIndex = 0; // OUT VALUE
+    int endIndex = 0; //OUT VALUE
+    int maxProfit = 0; //OUT VALUE
+    int maxNow = 0, maxWas = 0;
+    int trackStartIndexTmp = from;
+
+    for (int i = from; i < to; i++)
+    {
+        int diff = stockPrice[i + 1] - stockPrice[i];
+        maxNow += diff;
+
+        if (maxNow > maxWas || (maxNow == maxWas && trackStartIndexTmp < startIndex) || (maxNow == maxWas && trackStartIndexTmp == startIndex && i + 1 < endIndex))
+        {
+            DEBUG_PRINT("maxNow: %d, maxWas: %d\n", maxNow, maxWas);
+            DEBUG_PRINT("index: %d\n", trackStartIndexTmp);
+            maxWas = maxNow;
+            startIndex = trackStartIndexTmp;
+            endIndex = i + 1;
+            maxProfit = maxWas;
+        }
+        if (maxNow < 0)
+        {
+            maxNow = 0;
+            trackStartIndexTmp = i + 1;
+        }
+    }
+
+    if (maxProfit == 0)
+        printf("Nejvyssi zisk: N/A\n");
+    else
+        printf("Nejvyssi zisk: %d (%d - %d)\n", maxProfit, startIndex, endIndex);
+
+
+    //reset tracking values
+    startIndex = 0; // OUT VALUE
+    endIndex = 0; //OUT VALUE
+    maxNow = 0;
+    maxWas = 0;
+    trackStartIndexTmp = from; 
+
+    int maxLoss = 0; // OUT VALUE
+
+    for (int i = from; i < to; i++)
+    {
+        int diff = -(stockPrice[i + 1] - stockPrice[i]); // Make negative for the difference to decrease
+        maxNow += diff;
+
+        if (maxNow > maxWas || (maxNow == maxWas && trackStartIndexTmp < startIndex) || (maxNow == maxWas && trackStartIndexTmp == startIndex && i + 1 < endIndex))
+        {
+            maxWas = maxNow;
+            startIndex = trackStartIndexTmp;
+            endIndex = i + 1;
+            maxLoss = maxWas;
+        }
+        if (maxNow < 0) 
+        {
+            maxNow = 0;
+            trackStartIndexTmp = i + 1;
+        }
+    }
+
+    if (maxLoss == 0)
+        printf("Nejvyssi ztrata: N/A\n");
+    else
+        printf("Nejvyssi ztrata: %d (%d - %d)\n", maxLoss, startIndex, endIndex);
 
     return true;
 }
@@ -145,10 +212,10 @@ int main()
         }
     }
 
-    for (size_t i = 0; i < realLength; i++)
-    {
-        printf("%ld: %d\n", i, stockPrice[i]);
-    }
+    // for (size_t i = 0; i < realLength; i++)
+    // {
+    //     printf("%ld: %d\n", i, stockPrice[i]);
+    // }
     
     free(stockPrice);
 
