@@ -64,6 +64,26 @@ bool add_stock_price(int **stockPrice, size_t *realLength, size_t *allocLength)
     }
     (*stockPrice)[*realLength] = userInput;
     (*realLength)++;
+    DEBUG_PRINT("RealLength: %ld\n", *realLength);
+
+    return true;
+}
+
+bool check_stock(int *stockPrice, size_t *realLength)
+{
+    //using long long isted of size_t to detect negative values in user input
+    long long from, to;
+    if (scanf(" %lld %lld", &from, &to) != 2)
+        return false;
+
+    if (from < 0 || to < 0 || from > to)
+        return false;
+
+    if ((size_t)to >= *realLength)
+        return false;
+
+    //main algorithm
+    
 
     return true;
 }
@@ -103,7 +123,7 @@ int main()
         switch (operationChar)
         {
         case '+':
-            if (add_stock_price(&stockPrice, &realLength, &allocLength) == false)
+            if (!add_stock_price(&stockPrice, &realLength, &allocLength))
             {
                 error_msg();
                 return 1;
@@ -111,6 +131,11 @@ int main()
             break;
             
         case '?':
+            if (!check_stock(stockPrice, &realLength))
+            {
+                error_msg();
+                return 1;
+            }
             break;
         
         default:
@@ -125,7 +150,6 @@ int main()
         printf("%ld: %d\n", i, stockPrice[i]);
     }
     
-
     free(stockPrice);
 
     return 0;
