@@ -17,7 +17,7 @@ fi
 
 
 #compile with parameters used on progtest
-g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -Werror main.c
+g++ -std=c++17 -Wall -pedantic -Wno-long-long -O2 -Werror main.cpp
 
 # get current directory and executable location
 SCRIPT_DIR="$(pwd)"

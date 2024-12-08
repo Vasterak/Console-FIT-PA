@@ -18,12 +18,10 @@ const size_t DEFAULTALLOC = 4;
 
 int main()
 {
-    //VARIABLES
+    //MAIN VARIABLES
     char **puzzle = NULL;
-
     size_t puzzleWidth = 0;
     size_t puzzleHeight = 0;
-
     size_t puzzleAllocWidth = DEFAULTALLOC + 2;
     size_t puzzleAllocHeight = DEFAULTALLOC * 3;
     
@@ -38,29 +36,22 @@ int main()
         if (puzzle[i] == NULL)
             return 1;
     }
-    
-    //Write values to it
-    for (size_t i = 0; i < puzzleAllocWidth; i++)
-    {
-        puzzle[i][0] = 'A';
-        int tmp = 48;
-        for (size_t j = 1; j < puzzleAllocHeight; j++)
-        {
-            tmp+=1;
-            puzzle[i][j] = 'A';
-        }
-    }
 
-    //print it
-    for (size_t i = 0; i < puzzleAllocHeight; i++)
-    {
-        for (size_t j = 0; j < puzzleAllocWidth; j++)
-        {
-            printf("%c",puzzle[j][i] );
-        }
-        printf("\n");
-    }
-        printf("\n");
+    //READ INPUT
+    char *inputLine = NULL;
+    size_t allocatedLength = 10;
+    size_t readLength = 0;
+
+    printf("Write input\n");
+    printf("Alloc length before input read: %ld\n", allocatedLength);
+    readLength = getline(&inputLine, &allocatedLength, stdin);
+    printf("Alloc length after input read: %ld\n", allocatedLength);
+    printf("total length after input read: %ld\n", readLength);
+
+    
+
+    printf("input text: %s", inputLine);
+
 
     //free 2d array
     for (size_t i = 0; i < puzzleAllocWidth; i++)
