@@ -1,0 +1,35 @@
+Write me a C algorithm.
+The algorithm will receive an array of positive integers and two integer values "from", "to". These two values will be creating interval that specifies on which part of array we are working.
+The algorithm needs to find the largest continuous increase in array values and sum them together and also the largest continuous decrease in values and sum them together.
+
+The first example:
+The defined array is filled with these values "20, 30, 40, 10, 50".
+And given interval is 1-4 (first item in array has index 0).
+For this given inteval and it's given array the largest continuous increase is: 40.
+For this given interval and it's given array the largest continuous decrease is: 30.
+
+The second example:
+The defined array is filled with these values "100, 110, 105, 120, 70, 105, 50, 85, 40".
+And given interval is 0-8.
+For this given inteval and it's given array the largest continuous increase is: 35. located between indexes 4=represents value 70 from array and 5=represents value 105 from array.
+For this given inteval and it's given array the largest continuous decrease is: 80. located between indexes 3=represents value 120 from array and 8=represents value 40 from array.
+
+
+If there are multiple correct answers the algorithm will select with the lowest starting index and if there are still multiple values it will choose also with the lowest ending index.
+
+
+
+Write me a C algorithm.
+The algorithm will receive an array of positive integers in this array algorithm needs to find the largest continuous increase in array values and also the largest continuous decrease in values.
+
+The first example:
+The defined array is filled with these values "20, 30, 40, 10, 50".
+For this given array the largest continuous increase is: 40.
+For this given array the largest continuous decrease is: 30.
+
+The second example:
+The defined array is filled with these values "100, 110, 105, 120, 70, 105, 50, 85, 40".
+For this given array the largest continuous increase is: 35. located between indexes 4=represents value 70 from array and 5=represents value 105 from array.
+For this given array the largest continuous decrease is: 80. located between indexes 3=represents value 120 from array and 8=represents value 40 from array.
+
+If there are multiple correct answers the algorithm will select with the lowest starting index and if there are still multiple values it will choose also with the lowest ending index.
