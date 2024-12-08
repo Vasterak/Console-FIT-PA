@@ -9,4 +9,5 @@ fi
 if [ -f "$FILE2" ] ; then
 	rm "$FILE2"
 fi
-g++ -std=c++17 -Wall -pedantic -Wno-long-long -fsanitize=address -g  main.c
+g++ -std=c++17 -Wall -pedantic -Wno-long-long -g main.c
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./a.out
