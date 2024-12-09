@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 // Macro "function" to toggle debug messages
 // https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
@@ -18,6 +18,9 @@
 //CONSTANTS
 const size_t DEFAULT_HEIGHT = 2;
 const size_t MAX_LINE_LENGTH = 60;
+//combinations of all possible directions
+const int dirX[] = {-1, -1, -1,  0, 0,  1, 1, 1};
+const int dirY[] = {-1,  0,  1, -1, 1, -1, 0, 1};
 
 //STRUCTS
 typedef struct puzzleSpec
@@ -96,16 +99,76 @@ void print_secret(char *** puzzle, PuzzleSpec *puzzleData, bool *** checked)
                 printf("%c", (*puzzle)[i][j]);
                 currentLength++;
             }
-
         }
-        
     }
-    
+    if (currentLength != 0)
+        printf("\n");
 }
 
-void find_word(char *** puzzle, PuzzleSpec *puzzleData)
+bool is_valid_position(ssize_t x, ssize_t y, PuzzleSpec *puzzleData)
 {
+    DEBUG_PRINT("Checking %ld, %ld\n", x, y);
+    //check if we are not leaving the 2d array
+    if (x >= 0 && x < (ssize_t)puzzleData->height && y >= 0 && y < (ssize_t)puzzleData->width)
+        return true;
+    else
+        return false;
+}
 
+bool check_in_direction(char ***puzzle, PuzzleSpec *puzzleData, char *input, ssize_t inputLength, int heightIndex, int widthIndex, int dirIndex)
+{
+    // loop though input word
+    for (ssize_t i = 0; i < inputLength; i++)
+    {
+        if (!is_valid_position(heightIndex, widthIndex, puzzleData) || (*puzzle)[heightIndex][widthIndex] == '.')
+        {
+            return false;
+        }
+        
+        DEBUG_PRINT("Podmika: %c - %c\n", (*puzzle)[heightIndex][widthIndex], input[i]);
+
+        if ((*puzzle)[heightIndex][widthIndex] != input[i])
+        {
+            DEBUG_PRINT("%s\n", "now false");
+            return false;
+        }
+
+        // Move to next position in the current direction
+        heightIndex += dirX[dirIndex];
+        widthIndex += dirY[dirIndex];
+    }
+
+    return true;
+}
+
+size_t find_word(char *** puzzle, PuzzleSpec *puzzleData, char *input, ssize_t inputLength)
+{
+    DEBUG_PRINT("Looking for: '%s'\n", input);
+    size_t totalFind = 0;
+
+    for (size_t i = 0; i < puzzleData->height; i++)
+    {
+        for (size_t j = 0; j < puzzleData->width; j++)
+        {
+            //check if begining of the word is right and is not a dot
+            if ((*puzzle)[i][j] != '.' && (*puzzle)[i][j] == input[0])
+            {
+                //check all possible directions
+                for (size_t dirIndex = 0; dirIndex < 8; dirIndex++)
+                {
+                    DEBUG_PRINT("Direction: %ld and now we are on char: '%c'\n", dirIndex, (*puzzle)[i][j]);
+
+                    if (check_in_direction(puzzle, puzzleData, input, inputLength, i, j, dirIndex))
+                    {
+                        totalFind++;
+                        DEBUG_PRINT("Word start (%ld - %ld) in direction (%d - %d)\n", i, j, dirX[dirIndex], dirY[dirIndex]);
+                    }
+                }
+            }
+        }   
+    }
+
+    return totalFind;
 }
 
 void cross_word(char *** puzzle, PuzzleSpec *puzzleData, bool *** checked)
@@ -235,6 +298,12 @@ int main()
     //Input querries
     int scanfCodes = 0;
     char operationChar = '\0';
+
+    //getting user input
+    char *input = NULL;
+    size_t allocLength = 0;
+    ssize_t inputLength = 0;
+
     while (true)
     {
         scanfCodes = scanf(" %c", &operationChar);
@@ -259,7 +328,22 @@ int main()
             
         case '#':
             clear_whitespace();
-            find_word(&puzzle, &puzzleData);
+
+            //INPUT HENDLE
+            inputLength = getline(&input, &allocLength, stdin);
+            //check for trailing white spaces..., allow single word
+
+            if (input[inputLength -1] == '\n')
+                input[inputLength -1] = '\0';
+
+            if (inputLength == -1)
+            {
+                DEBUG_PRINT("%s\n","Error reading");
+                return 1;
+            }
+            
+            DEBUG_PRINT("Input length is: %ld\n", inputLength - 1);
+            printf("%s: %ldx\n", input, find_word(&puzzle, &puzzleData, input, inputLength - 1));
             break;
 
         case '?':
@@ -272,6 +356,14 @@ int main()
             return 1;
         }
     }
+
+    //
+    free(input);
+
+    // free 2d bool array
+    for (size_t i = 0; i < puzzleData.height; i++)
+        free(checked[i]);
+    free(checked);
 
     //free 2d array
     for (size_t i = 0; i < puzzleData.height; i++)
