@@ -17,11 +17,13 @@
 
 //CONSTANTS
 const size_t DEFAULT_HEIGHT = 2;
+const size_t MAX_LINE_LENGTH = 60;
 
 //STRUCTS
 typedef struct puzzleSpec
 {
     size_t height = 0;
+    size_t width = 0;
     size_t allocWidth = 0; //will be set by first input line, wont be changed
     size_t allocHeight = DEFAULT_HEIGHT;
 } PuzzleSpec;
@@ -75,9 +77,30 @@ bool check_string(char* text, size_t length)
     return true;
 }
 
-bool write_to_puzzle()
+void print_secret(char *** puzzle, bool *** checked, PuzzleSpec *puzzleData)
 {
-    return false;
+    size_t currentLength = 0;
+
+    for (size_t i = 0; i < puzzleData->height; i++)
+    {
+        for (size_t j = 0; j < puzzleData->width; j++)
+        {
+            if ((*checked)[i][j] == false && (*puzzle)[i][j] != '.')
+            {
+                if (currentLength == MAX_LINE_LENGTH)
+                {
+                    currentLength = 0;
+                    printf("\n");
+                }
+
+                printf("%c", (*puzzle)[i][j]);
+                currentLength++;
+            }
+
+        }
+        
+    }
+    
 }
 
 bool read_puzzle(char *** puzzle, PuzzleSpec *puzzleData)
@@ -163,6 +186,7 @@ bool read_puzzle(char *** puzzle, PuzzleSpec *puzzleData)
         DEBUG_PRINT("%ld\n", puzzleData->height);
     }
 
+    puzzleData->width = puzzleData->allocWidth - 2;
     free(inputLine);
     return true;
 }
@@ -178,8 +202,6 @@ int main()
     if (puzzle == NULL)
         return 1;
 
-    DEBUG_PRINT("Adresa pred: %p\n", (void *) puzzle);
-
     printf("Osmismerka:\n");
 
     //read input 2d array
@@ -190,16 +212,15 @@ int main()
         return 1;
     }
 
-    DEBUG_PRINT("Adresa po: %p\n", (void *) puzzle);
-
-    #ifdef DEBUG
-        for (size_t i = 0; i < puzzleData.height; i++)
-            printf("%s\n", puzzle[i]);
-    #endif
-
     DEBUG_PRINT("%s\n", "Prechod na dotazy");
-    DEBUG_PRINT("Sirka pole:%ld\n", puzzleData.allocWidth - 2);
+    DEBUG_PRINT("Sirka pole:%ld\n", puzzleData.width);
     DEBUG_PRINT("Vyska pole:%ld\n", puzzleData.height);
+
+    //create a bool 2d array for checking already used letters
+    bool **checked = NULL;
+    checked = (bool **) calloc(puzzleData.height, sizeof(bool*));
+    for (size_t i = 0; i < puzzleData.height; i++)
+        checked[i] = (bool *) calloc(puzzleData.width, sizeof(bool));
 
     //Input querries
     int scanfCodes = 0;
@@ -233,7 +254,7 @@ int main()
 
         case '?':
             printf("Tajenka:\n");
-            
+            print_secret(&puzzle, &checked, &puzzleData);
             break;
         
         default:
