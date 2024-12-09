@@ -41,6 +41,11 @@ void clear_whitespace()
         getchar();
 }
 
+void error_msg()
+{
+    printf("Nespravny vstup.\n");
+}
+
 bool check_string(char* text, size_t length)
 {
     for (size_t i = 0; i < length; i++)
@@ -173,21 +178,69 @@ int main()
     if (puzzle == NULL)
         return 1;
 
+    DEBUG_PRINT("Adresa pred: %p\n", (void *) puzzle);
+
     printf("Osmismerka:\n");
 
     //read input 2d array
     if (!read_puzzle(&puzzle, &puzzleData))
-        printf("Nespravny vstup.\n");
+    {
+        error_msg();
+        //freeup existing memory!
+        return 1;
+    }
 
-    //debug print
-    for (size_t i = 0; i < puzzleData.height; i++)
-        printf("%s\n", puzzle[i]);
+    DEBUG_PRINT("Adresa po: %p\n", (void *) puzzle);
+
+    #ifdef DEBUG
+        for (size_t i = 0; i < puzzleData.height; i++)
+            printf("%s\n", puzzle[i]);
+    #endif
 
     DEBUG_PRINT("%s\n", "Prechod na dotazy");
     DEBUG_PRINT("Sirka pole:%ld\n", puzzleData.allocWidth - 2);
     DEBUG_PRINT("Vyska pole:%ld\n", puzzleData.height);
 
+    //Input querries
+    int scanfCodes = 0;
+    char operationChar = '\0';
+    while (true)
+    {
+        scanfCodes = scanf(" %c", &operationChar);
+        if (scanfCodes != 1)
+        {
+            if (scanfCodes == EOF)
+                break;
+            else
+            {
+                error_msg();
+                //freeup existing memory!
+                return 1;
+            }
+        }
 
+        switch (operationChar)
+        {
+        case '-':
+            clear_whitespace();
+            //getline()
+
+            break;
+            
+        case '#':
+            //getline()
+            break;
+
+        case '?':
+            printf("Tajenka:\n");
+            
+            break;
+        
+        default:
+            error_msg();
+            return 1;
+        }
+    }
     
 
     //free 2d array
