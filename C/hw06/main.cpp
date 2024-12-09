@@ -77,7 +77,7 @@ bool check_string(char* text, size_t length)
     return true;
 }
 
-void print_secret(char *** puzzle, bool *** checked, PuzzleSpec *puzzleData)
+void print_secret(char *** puzzle, PuzzleSpec *puzzleData, bool *** checked)
 {
     size_t currentLength = 0;
 
@@ -101,6 +101,16 @@ void print_secret(char *** puzzle, bool *** checked, PuzzleSpec *puzzleData)
         
     }
     
+}
+
+void find_word(char *** puzzle, PuzzleSpec *puzzleData)
+{
+
+}
+
+void cross_word(char *** puzzle, PuzzleSpec *puzzleData, bool *** checked)
+{
+
 }
 
 bool read_puzzle(char *** puzzle, PuzzleSpec *puzzleData)
@@ -244,17 +254,17 @@ int main()
         {
         case '-':
             clear_whitespace();
-            //getline()
-
+            cross_word(&puzzle, &puzzleData, &checked);
             break;
             
         case '#':
-            //getline()
+            clear_whitespace();
+            find_word(&puzzle, &puzzleData);
             break;
 
         case '?':
             printf("Tajenka:\n");
-            print_secret(&puzzle, &checked, &puzzleData);
+            print_secret(&puzzle, &puzzleData, &checked);
             break;
         
         default:
@@ -262,7 +272,6 @@ int main()
             return 1;
         }
     }
-    
 
     //free 2d array
     for (size_t i = 0; i < puzzleData.height; i++)
