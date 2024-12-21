@@ -57,7 +57,7 @@ bool check_string(char* text, size_t length)
     {
         if (text[i] != '.')
         {
-            if (text[i] < 'a' || text[i] > 'y')
+            if (text[i] < 'a' || text[i] > 'z')
             {
                 if (text[i] == '\n')
                 {
@@ -141,6 +141,17 @@ bool check_in_direction(char ***puzzle, PuzzleSpec *puzzleData, char *input, ssi
     return true;
 }
 
+void tick_in_direction(bool ***checked, ssize_t inputLength, int heightIndex, int widthIndex, int dirIndex)
+{
+    for (ssize_t i = 0; i < inputLength; i++)
+    {
+        (*checked)[heightIndex][widthIndex] = true;
+
+        heightIndex += dirX[dirIndex];
+        widthIndex += dirY[dirIndex];
+    }
+}
+
 size_t find_word(char *** puzzle, PuzzleSpec *puzzleData, char *input, ssize_t inputLength)
 {
     DEBUG_PRINT("Looking for: '%s'\n", input);
@@ -171,9 +182,34 @@ size_t find_word(char *** puzzle, PuzzleSpec *puzzleData, char *input, ssize_t i
     return totalFind;
 }
 
-void cross_word(char *** puzzle, PuzzleSpec *puzzleData, bool *** checked)
+size_t cross_word(char ***puzzle, PuzzleSpec *puzzleData, char *input, ssize_t inputLength, bool ***checked)
 {
+    DEBUG_PRINT("Looking for: '%s'\n", input);
+    size_t totalFind = 0;
 
+    for (size_t i = 0; i < puzzleData->height; i++)
+    {
+        for (size_t j = 0; j < puzzleData->width; j++)
+        {
+            // check if begining of the word is right and is not a dot
+            if ((*puzzle)[i][j] != '.' && (*puzzle)[i][j] == input[0])
+            {
+                // check all possible directions
+                for (size_t dirIndex = 0; dirIndex < 8; dirIndex++)
+                {
+                    DEBUG_PRINT("Direction: %ld and now we are on char: '%c'\n", dirIndex, (*puzzle)[i][j]);
+
+                    if (check_in_direction(puzzle, puzzleData, input, inputLength, i, j, dirIndex))
+                    {
+                        totalFind++;
+                        tick_in_direction(checked, inputLength, i, j, dirIndex);
+                        DEBUG_PRINT("Word start (%ld - %ld) in direction (%d - %d)\n", i, j, dirX[dirIndex], dirY[dirIndex]);
+                    }
+                }
+            }
+        }
+    }
+    return totalFind;
 }
 
 bool read_puzzle(char *** puzzle, PuzzleSpec *puzzleData)
@@ -198,7 +234,11 @@ bool read_puzzle(char *** puzzle, PuzzleSpec *puzzleData)
 
     //check for valid data inside input string
     if (!check_string(inputLine, setWidth))
+    {
+        DEBUG_PRINT("%s\n", "tady kick?1");
         return false;
+    }
+        
 
     //alloc first line of values to puzzle 2d array
     (*puzzle)[puzzleData->height] = (char*) malloc(sizeof(char) * puzzleData->allocWidth);  
@@ -235,6 +275,7 @@ bool read_puzzle(char *** puzzle, PuzzleSpec *puzzleData)
         if (!check_string(inputLine, setWidth))
         {
             free(inputLine);
+            DEBUG_PRINT("%s\n", "tady kick?2");
             return false;
         }
 
@@ -306,6 +347,11 @@ int main()
 
     while (true)
     {
+        if (peak_char() == ' ')
+        {
+            error_msg();
+            return 1;
+        }
         scanfCodes = scanf(" %c", &operationChar);
         if (scanfCodes != 1)
         {
@@ -323,7 +369,35 @@ int main()
         {
         case '-':
             clear_whitespace();
-            cross_word(&puzzle, &puzzleData, &checked);
+
+            // INPUT HENDLE
+            inputLength = getline(&input, &allocLength, stdin);
+            // check for trailing white spaces..., allow single word
+
+            if (input[inputLength - 1] == '\n')
+                input[inputLength - 1] = '\0';
+
+            if (inputLength == -1)
+            {
+                DEBUG_PRINT("%s\n", "Error reading");
+                return 1;
+            }
+
+            if (inputLength - 1 < 2)
+            {
+                error_msg();
+                return 1;
+            }
+
+            if (strchr(input, ' ') != NULL)
+            {
+                error_msg();
+                return 1;
+            }
+
+            DEBUG_PRINT("Input length is: %ld\n", inputLength - 1);
+            DEBUG_PRINT("Input word is: %s\n", input);
+            printf("%s: %ldx\n", input, cross_word(&puzzle, &puzzleData, input, inputLength - 1, &checked));
             break;
             
         case '#':
@@ -341,12 +415,29 @@ int main()
                 DEBUG_PRINT("%s\n","Error reading");
                 return 1;
             }
-            
+
+            if (inputLength - 1 < 2)
+            {
+                error_msg();
+                return 1;
+            }
+
+            if (strchr(input, ' ') != NULL)
+            {
+                error_msg();
+                return 1;
+            }
+
             DEBUG_PRINT("Input length is: %ld\n", inputLength - 1);
             printf("%s: %ldx\n", input, find_word(&puzzle, &puzzleData, input, inputLength - 1));
             break;
 
         case '?':
+            if (peak_char() != '\n')
+            {
+                error_msg();
+                return 1;
+            }
             printf("Tajenka:\n");
             print_secret(&puzzle, &puzzleData, &checked);
             break;
