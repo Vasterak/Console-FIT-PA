@@ -9,41 +9,38 @@ constexpr int PHONE_DIGITS = 10;
 
 typedef struct TNode
 {
-  char                               * m_Name;
-  struct TNode                       * m_Child[PHONE_DIGITS];
+    char * m_Name;
+    struct TNode * m_Child[PHONE_DIGITS];
 } TNODE;
 
 typedef struct
 {
-  TNODE                              * m_Root;
-  int                                  m_Size;
+    TNODE * m_Root;
+    int m_Size;
 } TPHONEBOOK;
 
 #endif /* __PROGTEST__ */
 
-bool         addPhone  ( TPHONEBOOK * book,
-                         const char * phone,
-                         const char * name )
+bool addPhone( TPHONEBOOK * book, const char * phone, const char * name )
 {
   // todo
 }
 
-void         delBook   ( TPHONEBOOK * book )
+void delBook ( TPHONEBOOK * book )
+{
+
+}
+bool delPhone ( TPHONEBOOK * book, const char * phone )
 {
   // todo
 }
-bool         delPhone  ( TPHONEBOOK * book,
-                         const char * phone )
-{
-  // todo
-}
-const char * findPhone ( TPHONEBOOK * book,
-                         const char * phone )
+const char * findPhone ( TPHONEBOOK * book, const char * phone )
 {
   // todo
 }
 
 #ifndef __PROGTEST__
+
 int main ()
 {
   TPHONEBOOK b = { nullptr, 0 };
