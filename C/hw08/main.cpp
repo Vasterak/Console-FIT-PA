@@ -94,46 +94,48 @@ void free_phonebook(TNODE * currentRoot)
     free(currentRoot);
 }
 
-static int isNodeEmpty(const TNODE *node)
+static int is_node_empty(const TNODE *node)
 {
     if (!node)
         return 1;
+
     if (node->m_Name)
         return 0;
+
     for (int i = 0; i < 10; i++)
     {
-        if (node->m_Child[i] != NULL)
+        if (node->m_Child[i] != nullptr)
             return 0;
     }
+
     return 1;
 }
 
-static TNODE *removePhoneRecursive(TNODE *current, const char *phone, TPHONEBOOK *book, int *removed)
+static TNODE *remove_phone_recursive(TNODE *current, const char *phone, TPHONEBOOK *book, int *removed)
 {
-    if (!current)
-        return NULL;
+    if (current == nullptr)
+        return nullptr;
 
     if (!*phone)
     {
-        // Tady jsme ve finální uzlu prefixu
+        // in final prefix
         if (current->m_Name)
         {
-            // Odstraníme jméno a korektně upravíme m_Size
+            // delete it and chage size
             free(current->m_Name);
-            current->m_Name = NULL;
+            current->m_Name = nullptr;
             book->m_Size--;
             *removed = 1;
         }
     }
     else
     {
-        // ještě máme znaky v "phone", jdeme do příslušného potomka
         int digit = *phone - '0';
-        current->m_Child[digit] = removePhoneRecursive(current->m_Child[digit], phone + 1, book, removed);
+        current->m_Child[digit] = remove_phone_recursive(current->m_Child[digit], phone + 1, book, removed);
     }
 
-    // Po rekurzi zkusíme uzel vyčistit, pokud je prázdný
-    if (isNodeEmpty(current))
+    // check for empty
+    if (is_node_empty(current))
     {
         free(current);
         current = NULL;
@@ -153,13 +155,8 @@ bool addPhone( TPHONEBOOK * book, const char * phone, const char * name )
     if (!is_valid_phone(phone))
         return false;
 
-    // Pokud ještě neexistuje kořen, vytvoříme ho
     if (!book->m_Root)
-    {
         book->m_Root = create_node();
-        if (!book->m_Root)
-            return false; // selhání alokace
-    }
 
     TNODE *currentNode = book->m_Root;
 
@@ -211,13 +208,15 @@ bool delPhone ( TPHONEBOOK * book, const char * phone )
 {
     if (!book || !phone)
         return false;
+
     if (!is_valid_phone(phone))
         return false;
+        
     if (!book->m_Root)
         return false;
 
     int removed = 0;
-    book->m_Root = removePhoneRecursive(book->m_Root, phone, book, &removed);
+    book->m_Root = remove_phone_recursive(book->m_Root, phone, book, &removed);
     return removed ? true : false;
 }
 
@@ -230,25 +229,8 @@ const char * findPhone ( TPHONEBOOK * book, const char * phone )
         return nullptr;
 
     TNODE *currentNode = book->m_Root;
-    int digit = 0;
 
     //silimar as in add phone
-    for (size_t i = 0; i < PHONE_DIGITS; i++)
-    {
-        // if node has the name save it
-        if (currentNode->m_Name != nullptr)
-            bestMatchName = currentNode->m_Name;
-
-        digit = phone[i] - '0';
-        
-        //check if next number exists in the tree if not end and return the best name so far.
-        if (currentNode->m_Child[digit] != nullptr)
-            break;
-
-        // move deeper into the tree structure and increse digit by one, similar to "add phone"
-        currentNode = currentNode->m_Child[digit];
-    }
-
     for (const char *p = phone; *p; p++)
     {
         // if node has the name save it
