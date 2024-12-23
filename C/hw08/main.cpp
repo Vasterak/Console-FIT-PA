@@ -53,18 +53,18 @@ TNODE* create_node_init()
     return node;
 }
 
-TNODE *create_node()
+static TNODE *create_node()
 {
-    TNODE *node = (TNODE *)malloc(sizeof(TNODE));
-    if (!node)
+    TNODE *newNode = (TNODE *)malloc(sizeof(TNODE));
+
+    if (newNode == nullptr)
         return nullptr;
 
-    node->m_Name = nullptr;
+    newNode->m_Name = nullptr;
 
-    for (size_t i = 0; i < PHONE_DIGITS; i++)
-        node->m_Child[i] = nullptr;
-
-    return node;
+    for (int i = 0; i < 10; i++)
+        newNode->m_Child[i] = nullptr;
+    return newNode;
 }
 
 // not performed directly in "delBook" because of TNODE argument.
@@ -94,6 +94,54 @@ void free_phonebook(TNODE * currentRoot)
     free(currentRoot);
 }
 
+static int isNodeEmpty(const TNODE *node)
+{
+    if (!node)
+        return 1;
+    if (node->m_Name)
+        return 0;
+    for (int i = 0; i < 10; i++)
+    {
+        if (node->m_Child[i] != NULL)
+            return 0;
+    }
+    return 1;
+}
+
+static TNODE *removePhoneRecursive(TNODE *current, const char *phone, TPHONEBOOK *book, int *removed)
+{
+    if (!current)
+        return NULL;
+
+    if (!*phone)
+    {
+        // Tady jsme ve finální uzlu prefixu
+        if (current->m_Name)
+        {
+            // Odstraníme jméno a korektně upravíme m_Size
+            free(current->m_Name);
+            current->m_Name = NULL;
+            book->m_Size--;
+            *removed = 1;
+        }
+    }
+    else
+    {
+        // ještě máme znaky v "phone", jdeme do příslušného potomka
+        int digit = *phone - '0';
+        current->m_Child[digit] = removePhoneRecursive(current->m_Child[digit], phone + 1, book, removed);
+    }
+
+    // Po rekurzi zkusíme uzel vyčistit, pokud je prázdný
+    if (isNodeEmpty(current))
+    {
+        free(current);
+        current = NULL;
+    }
+
+    return current;
+}
+
 // -------------------- PRE-DEFINED FUNCTIONS ------------------------
 
 bool addPhone( TPHONEBOOK * book, const char * phone, const char * name )
@@ -105,46 +153,48 @@ bool addPhone( TPHONEBOOK * book, const char * phone, const char * name )
     if (!is_valid_phone(phone))
         return false;
 
-    //this runs only for the first time
-    if (book->m_Root == nullptr)
-        book->m_Root = create_node_init(); // add check when memory allocation fails
-
-    //keep record of current Node
-    TNODE *currentNode = book->m_Root;
-    int digit = 0;
-
-    // Go phone number by digit by digit.
-    for (size_t i = 0; i < PHONE_DIGITS; i++)
+    // Pokud ještě neexistuje kořen, vytvoříme ho
+    if (!book->m_Root)
     {
-        digit = phone[i] - '0';
-        if (currentNode->m_Child[digit] == nullptr)
-            currentNode->m_Child[digit] = create_node(); //add check when memory allocation fails
+        book->m_Root = create_node();
+        if (!book->m_Root)
+            return false; // selhání alokace
+    }
 
-        //move deeper into the tree structure and increse digit by one
+    TNODE *currentNode = book->m_Root;
+
+    //go digit by digit
+    for (const char *p = phone; *p; p++)
+    {
+        int digit = *p - '0';
+        if (!currentNode->m_Child[digit])
+            currentNode->m_Child[digit] = create_node();
+        
         currentNode = currentNode->m_Child[digit];
     }
 
-    size_t nameLength = strlen(name);
+    //size_t nameLength = strlen(name);
 
     //loop finished and apply name if the name does not exists
     if (currentNode->m_Name == nullptr)
     {
         //alloc memory for the input name and copy it.
-        currentNode->m_Name = (char *)malloc(nameLength + 1);
-        strncpy(currentNode->m_Name, name, nameLength);
+        currentNode->m_Name = (char *)malloc(strlen(name) + 1);
 
+        strcpy(currentNode->m_Name, name);
         book->m_Size++;
-        printf("name is: %s\n", name);
+        //printf("name is: %s\n", name);
     }
     //When name already exists
     else
     {
         //alloc new memory for new name free the existing name and replace it. or maybe realloc will be better? idk just the preference.
-        char *tempName = (char*) malloc(nameLength + 1);
-        strncpy(tempName, name, nameLength);
+        char *tmp = (char *)malloc(strlen(name) + 1);
+
+        strcpy(tmp, name);
         free(currentNode->m_Name);
-        currentNode->m_Name = tempName;
-        printf("name rewrite: %s\n", name);
+        currentNode->m_Name = tmp;
+        //printf("name rewrite: %s\n", name);
     }
 
     return true;
@@ -159,12 +209,16 @@ void delBook ( TPHONEBOOK * book )
 
 bool delPhone ( TPHONEBOOK * book, const char * phone )
 {
-    // // input check
-    // if (book == nullptr || !is_valid_phone(phone) || book->m_Root == nullptr)
-    //     return false;
+    if (!book || !phone)
+        return false;
+    if (!is_valid_phone(phone))
+        return false;
+    if (!book->m_Root)
+        return false;
 
-    // TNODE *currentNode = book->m_Root;
-    // //to do
+    int removed = 0;
+    book->m_Root = removePhoneRecursive(book->m_Root, phone, book, &removed);
+    return removed ? true : false;
 }
 
 const char * findPhone ( TPHONEBOOK * book, const char * phone )
@@ -195,6 +249,21 @@ const char * findPhone ( TPHONEBOOK * book, const char * phone )
         currentNode = currentNode->m_Child[digit];
     }
 
+    for (const char *p = phone; *p; p++)
+    {
+        // if node has the name save it
+        if (currentNode->m_Name)
+            bestMatchName = currentNode->m_Name;
+
+        int digit = *p - '0';
+
+        // check if next number exists in the tree if not end and return the best name so far.
+        if (!currentNode->m_Child[digit])
+            break;
+
+        currentNode = currentNode->m_Child[digit];
+    }
+
     //make sure when the loop exits, that the possible last node is checked, if it contains name it is valid.
     if (currentNode->m_Name != nullptr)
         bestMatchName = currentNode->m_Name;
@@ -218,8 +287,6 @@ int main ()
   strncpy ( tmpStr, "Guam", sizeof ( tmpStr ) - 1 );
   assert ( addPhone ( &b, "1671", tmpStr ) );
   assert ( addPhone ( &b, "44", "United Kingdom" ) );
-  printf("size:%d\n", b.m_Size);
-
   assert ( b . m_Size == 6 );
   assert ( ! b . m_Root -> m_Name );
   assert ( ! b . m_Root -> m_Child[0] );
