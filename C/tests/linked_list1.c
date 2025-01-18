@@ -27,55 +27,71 @@ typedef struct list
 
 Person * create_person(const size_t id, const size_t age, const char name[])
 {
-    Person * newe = (Person *) malloc(sizeof(Person));
-    newe->age = age;
-    newe->id = id;
-    newe->next = NULL;
-    strncpy(newe->name, name, 20);
+    Person * newPerson = (Person *) malloc(sizeof(Person));
+    newPerson->age = age;
+    newPerson->id = id;
+    newPerson->next = NULL;
+    strncpy(newPerson->name, name, 20);
+    return newPerson;
+}
 
-    return newe;
+void create_person_new(List * list, const size_t id, const size_t age, const char name[])
+{   
+    Person *tmp = NULL;
+    //get head if it exists
+    if (list->head != NULL)
+        tmp = list->head;
+
+    list->head = create_person(id, age, name);
+    list->head->next = tmp;
+}
+
+void print_linked_list(const List *list)
+{
+    Person *loop = list->head;
+
+    while (true)
+    {
+        if (loop == NULL)
+            break;
+        printf("id: %ld, age: %ld, name: %s\n", loop->age, loop->age, loop->name);
+        loop = loop->next;
+    }
+}
+
+void list_mem_clear(List *list)
+{
+    Person *tmp;
+
+    while (true)
+    {   
+        tmp = list->head;
+        if (tmp == NULL)
+            break;
+        list->head = list->head->next;
+        free(tmp);
+    }
 }
 
 
 int main()
 {
     List theList;
+    theList.head = NULL;
     theList.length = 0;
 
-    theList.head = create_person(1, 22, "Vaclav Horcicka");
+    create_person_new(&theList,1, 22, "Vaclav Horcicka");
+    create_person_new(&theList,2, 24, "Test object");
+    create_person_new(&theList,3, 30, "David Nevim");
+    create_person_new(&theList,4, 20, "Ja neviem uz");
 
-    theList.head->next = create_person(2, 24, "Test object");
 
-    theList.head->next->next = create_person(2, 20, "Teste object");
+    //print the linked list
+    print_linked_list(&theList);
+    printf("Debil\n");
+    print_linked_list(&theList);
 
-    Person * lastOne;
-    lastOne = theList.head;
-    while (true)
-    {
-        if (lastOne != NULL)
-        {
-            printf("id: %ld, age: %ld, name: %s\n", lastOne->id, lastOne->age, lastOne->name);
-            lastOne = lastOne->next;
-        }
-        else
-            break;
-
-    }
-
-    lastOne = theList.head;
-    while (true)
-    {
-        Person *tmp;
-        if (lastOne != NULL)
-        {
-            tmp = lastOne; 
-            lastOne = lastOne->next;
-            free(tmp); 
-        }
-        else
-            break;
-
-    }
+    list_mem_clear(&theList);
 
     printf("the end\n");
 }
