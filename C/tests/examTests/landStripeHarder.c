@@ -36,6 +36,8 @@ typedef struct
     int ** plotValues;
 } Plots;
 
+int largestSquare = 0;
+
 bool _alloc_array(Plots *array)
 {
     array->plotValues = (int**) malloc(sizeof(int**) * array->height);
@@ -136,6 +138,10 @@ int _helper_square(Plots *array, int **cache, size_t xHeight, size_t yWidth, con
         if (array->plotValues[xHeight][yWidth] >= minimum)
         {
             cache[xHeight][yWidth] = 1 + MIN(right, MIN(bottom, diagonal));
+
+            //to save computetional power when printing out only largest squares.
+            if (cache[xHeight][yWidth] > largestSquare)
+                largestSquare = cache[xHeight][yWidth];
         }
         else
             cache[xHeight][yWidth] = 0;
@@ -158,25 +164,44 @@ void find_squares(Plots *array, int min)
             cache[i][j] = -1;
     }
 
-    int tempShit = _helper_square(array, cache, 0, 0, min);
-    printf("tempShit is: %d\n", tempShit);
+    _helper_square(array, cache, 0, 0, min);
+    //printf("tempShit is: %d\n", tempShit);
 
-    //PRINT THE CACHE
-    for (size_t i = 0; i < array->height; i++)
+    // //PRINT THE CACHE
+    // for (size_t i = 0; i < array->height; i++)
+    // {
+    //     for (size_t j = 0; j < array->width; j++)
+    //     {
+    //         if (cache[i][j] == -1)
+    //             printf("# ");
+    //         else
+    //             printf("%d ", cache[i][j]);
+
+    //     }
+    //     printf("\n");
+    // }
+
+    //Print only the biggest possible
+    if (largestSquare > 0)
     {
-        for (size_t j = 0; j < array->width; j++)
+        printf("Nejvetsi: %dx%d\n", largestSquare, largestSquare);
+
+        for (size_t i = 0; i < array->height; i++)
         {
-            if (cache[i][j] == -1)
-                printf("# ");
-            else
-                printf("%d ", cache[i][j]);
-
+            for (size_t j = 0; j < array->width; j++)
+            {
+                if (cache[i][j] == largestSquare)
+                {
+                    printf("* (%ld,%ld)\n", j, i);
+                }
+            }
         }
-        printf("\n");
     }
+    else
+        printf("Neexistuje.\n");
     
-
     //free cache
+    largestSquare = 0;
     for (size_t i = 0; i < array->height; i++)
         free(cache[i]);
     free(cache);
@@ -221,7 +246,7 @@ int main()
             printf("Bad input value.\n");
             return 1;
         }
-        print_values(&pole);
+        //print_values(&pole);
         find_squares(&pole, min);
     }
     return 0;
