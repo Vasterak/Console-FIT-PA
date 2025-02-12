@@ -1,3 +1,28 @@
+// THIS IS SOLVED BY RECURSION AND USING MEMOIZATION OTHERWISE TOO SLOW.
+// THIS IS A BASICALLY A PROBLEM OF FINDING THE LARGEST POSSIBLE SQUARE IN 2D ARRAY
+
+/* ASSIGNEMENT
+Na vstupu jsou (obdobně jako u předchozích zadání) nejdříve zadána 2 celá čísla větší než 0, která určují šířku a výšku pozemku. Dále je zadáno W * H čísel, které vyplní jednotlivé parcely pozemku. Následovně jsou až do signálu EOF dávány dotazy ve tvaru min, kde min je minimální (tedy větší nebo rovno) skóre DEI pro všechny parcely v našem hledaném pozemku.
+
+Úkolem je realizovat program, který tyto vstupy načte a zobrazí největší ČTVERCOVÝ pozemek, který splňuje podmínku viz min a zobrazí souřadnici jeho počátku (tj. jeho levý horní roh).
+
+Pokud takových pozemků existuje více, program vypíše všechny. Pokud takový pozemek neexistuje, program vypíše „Neexistuje.“ (ale nekončí běh).
+
+Chybné vstupy (program po jejich nalezení okamžitě končí svůj běh):
+
+Šířka nebo výška není číslo nebo je menší nebo rovno 0
+Skoré DEI parcely není číslo nebo je menší než 0
+Min není číslo nebo je menší než 0
+Příklad vstupu (> vstup, < výstup):
+*/
+
+/*
+3 8 2 2
+1 4 5 6
+7 1 2 3
+0 9 1 6
+
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -63,8 +88,10 @@ bool set_values(Plots *array)
     {
         for (size_t j = 0; j < array->width; j++)
         {
-            if (scanf(" %d", &inputValue) != 1)
+            if ((scanf(" %d", &inputValue)) != 1)
+            {
                 return false;
+            }
             array->plotValues[i][j] = inputValue;
         }    
     }
